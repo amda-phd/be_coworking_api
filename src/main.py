@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Response, status
+
 from .db import connect_to_mongodb, close_mongodb_connection, ping_health
+from .routers.rooms import router as rooms_router
 
 app = FastAPI(
     title = "Coworking API",
@@ -8,7 +10,7 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def on_startup():
-    await connect_to_mongodb()
+    app.mongodb = await connect_to_mongodb()
 
 @app.on_event("shutdown")
 async def on_shutdown():
@@ -27,3 +29,5 @@ async def health():
     if (await ping_health()):
         return Response(status_code = status.HTTP_204_NO_CONTENT)
     raise HTTPException(status_code=503, detail="MongoDB unavailable")
+
+app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
