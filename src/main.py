@@ -1,7 +1,10 @@
-from fastapi import FastAPI
-from .db import connect_to_mongodb, close_mongodb_connection
+from fastapi import FastAPI, HTTPException, Response, status
+from .db import connect_to_mongodb, close_mongodb_connection, ping_health
 
-app = FastAPI()
+app = FastAPI(
+    title = "Coworking API",
+    description = "The backend of meeting space booking app"
+)
 
 @app.on_event("startup")
 async def on_startup():
@@ -11,6 +14,16 @@ async def on_startup():
 async def on_shutdown():
     await close_mongodb_connection()
 
-@app.get("/health")
+@app.get(
+    "/health",
+    status_code = 204,
+    description = "Check the server's and MongoDB connection integrity",
+    responses = {
+        204: { "description": "Server and database reachable" },
+        500: { "description": "Server unreachable" },
+        503: { "description": "Database unreachable" }
+    })
 async def health():
-    return { "API": True }
+    if (await ping_health()):
+        return Response(status_code = status.HTTP_204_NO_CONTENT)
+    raise HTTPException(status_code=503, detail="MongoDB unavailable")
