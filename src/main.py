@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response, status
+from fastapi import FastAPI, HTTPException, Response, status, Request
 
 from .db import connect_to_mongodb, close_mongodb_connection, ping_health
 from .routers.rooms import router as rooms_router
@@ -9,12 +9,12 @@ app = FastAPI(
 )
 
 @app.on_event("startup")
-async def on_startup():
-    app.mongodb = await connect_to_mongodb()
+def on_startup():
+    connect_to_mongodb(app)
 
 @app.on_event("shutdown")
-async def on_shutdown():
-    await close_mongodb_connection()
+def on_shutdown():
+    close_mongodb_connection(app)
 
 @app.get(
     "/health",
@@ -25,8 +25,8 @@ async def on_shutdown():
         500: { "description": "Server unreachable" },
         503: { "description": "Database unreachable" }
     })
-async def health():
-    if (await ping_health()):
+async def health(request: Request):
+    if (await ping_health(request.app.mongodb)):
         return Response(status_code = status.HTTP_204_NO_CONTENT)
     raise HTTPException(status_code=503, detail="MongoDB unavailable")
 

@@ -8,21 +8,31 @@ MONGODB_NAME = config('MONGODB_NAME', cast=str)
 client: AsyncIOMotorClient = None
 db: AsyncIOMotorDatabase = None
 
-async def connect_to_mongodb():
+def connect_to_mongodb(app):
     global client, db
     client = AsyncIOMotorClient(MONGODB_URL)
     db = client[MONGODB_NAME]
+    if app:
+        app.mongodb_client = client
+        app.mongodb = db
     return db
 
-async def close_mongodb_connection():
+def close_mongodb_connection(app):
+    if app:
+        client = app.mongodb_client
     if client:
         client.close()
 
-async def ping_health():
-    new_ping = await db["health"].insert_one({})
-    created_ping = await db["health"].find_one({
-        "_id": new_ping.inserted_id
-    })
-    if created_ping is not None:
-        return True
-    return False
+async def ping_health(db: AsyncIOMotorDatabase):
+    try:
+        new_ping = await db["health"].insert_one({})
+        created_ping = await db["health"].find_one({
+            "_id": new_ping.inserted_id
+        })
+        if created_ping is not None:
+            return True
+        return False
+    except Exception as e:
+        print(f"Something went wrong with the database:\n{e}")
+        return False
+    
