@@ -27,16 +27,18 @@ def close_mongodb_connection(app):
     if client:
         client.close()
 
-async def ping_health(db: AsyncIOMotorDatabase):
+async def ping_mongodb(db: AsyncIOMotorDatabase):
     try:
         new_ping = await db["health"].insert_one({})
+        if new_ping is None:
+            raise "The ping object couln't be created"
         created_ping = await db["health"].find_one({
             "_id": new_ping.inserted_id
         })
         if created_ping is not None:
-            return True
-        return False
+            return
+        raise "The ping object couldn't be recovered"
     except Exception as e:
-        print(f"Something went wrong with the database:\n{e}")
-        return False
+        raise f"Something went wrong with the database:\n{e}"
+        
     
