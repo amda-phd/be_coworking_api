@@ -17,7 +17,8 @@ class PyObjectId(ObjectId):
         field_schema.update(type = "string")
 
 class MongoBaseModel(BaseModel):
-    id: PyObjectId = Field(default_factory = PyObjectId, alias = "_id")
+    _id: PyObjectId = Field(default_factory = PyObjectId)
+    id: int = Field(gt = 0)
 
     class Config:
         json_encoders = { ObjectId: str }

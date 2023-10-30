@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from mongomock_motor import AsyncMongoMockClient
 from decouple import config
+from fastapi.encoders import jsonable_encoder
 
 MONGODB_URL = config('MONGODB_URL', cast=str)
 MONGODB_NAME = config('MONGODB_NAME', cast=str)
@@ -41,4 +42,12 @@ async def ping_mongodb(db: AsyncIOMotorDatabase):
     except Exception as e:
         raise f"Something went wrong with the database:\n{e}"
         
+async def seed_mongodb(db: AsyncIOMotorClient, data: dict, clean: bool = True):
+    counter = 0
+    for key in data:
+        if clean:
+            await db[key].drop()
+        response = await db[key].insert_many(jsonable_encoder(data[key]))
+        counter += len(response.inserted_ids)
     
+    return f"{counter} entries created"

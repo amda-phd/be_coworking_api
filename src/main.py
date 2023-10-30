@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException, Response, status, Request
+from fastapi import FastAPI, HTTPException, Response, status, Request, Body
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
-from .db import connect_to_mongodb, close_mongodb_connection, ping_mongodb
+from .db import connect_to_mongodb, close_mongodb_connection, ping_mongodb, seed_mongodb
 from .routers.rooms import router as rooms_router
 
 app = FastAPI(
@@ -32,5 +34,24 @@ async def health(request: Request):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=503, detail="MongoDB unavailable")
+    
+
+@app.post(
+    "/seed",
+    description="UNSAFELY Seed the database from a json",
+    responses = {
+        201: { "description": "All data was seeded successfully" },
+        500: { "description": "Something went wrong with the database communication" }
+    },
+    tags=["rooms", "clients", "bookings"]
+)
+async def seed_db(
+    request: Request,
+    seed: dict = Body(...),
+    clean: bool = True
+    ):
+    message = await seed_mongodb(request.app.mongodb, seed, clean)
+    return JSONResponse(status_code = status.HTTP_201_CREATED, content = jsonable_encoder({ "message": message }))
+
 
 app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
