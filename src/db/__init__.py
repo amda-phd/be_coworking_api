@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from mongomock_motor import AsyncMongoMockClient
 from decouple import config
 
 MONGODB_URL = config('MONGODB_URL', cast=str)
@@ -8,9 +9,12 @@ MONGODB_NAME = config('MONGODB_NAME', cast=str)
 client: AsyncIOMotorClient = None
 db: AsyncIOMotorDatabase = None
 
-def connect_to_mongodb(app):
+def connect_to_mongodb(app, testing: bool = False):
     global client, db
-    client = AsyncIOMotorClient(MONGODB_URL)
+    if testing:
+        client = AsyncMongoMockClient()
+    else:
+        client = AsyncIOMotorClient(MONGODB_URL)
     db = client[MONGODB_NAME]
     if app:
         app.mongodb_client = client
