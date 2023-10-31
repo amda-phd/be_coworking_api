@@ -3,7 +3,8 @@ from mongomock_motor import AsyncMongoMockClient
 from decouple import config
 from fastapi.encoders import jsonable_encoder
 
-MONGODB_URL = config('MONGODB_URL', cast=str)
+MONGODB_HOST = config('MONGODB_HOST', cast=str)
+MONGODB_PORT = config('MONGODB_PORT', cast=int)
 MONGODB_NAME = config('MONGODB_NAME', cast=str)
 
 # Initialize the MongoDB client and database
@@ -15,7 +16,7 @@ def connect_to_mongodb(app, testing: bool = False):
     if testing:
         client = AsyncMongoMockClient()
     else:
-        client = AsyncIOMotorClient(MONGODB_URL)
+        client = AsyncIOMotorClient(MONGODB_HOST, MONGODB_PORT)
     db = client[MONGODB_NAME]
     if app:
         app.mongodb_client = client
