@@ -1,5 +1,6 @@
 from bson import ObjectId
 from pydantic import BaseModel, Field
+from fastapi import HTTPException
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -40,7 +41,11 @@ class MongoBaseModel(BaseModel):
         if self.id == 0:
             self.id = await self.make_valid_id(collection)
         elif not (await self.is_valid_id(self.id, collection)):
-            raise ValueError("Invalid id")
+            # TODO: Add error handling middleware
+            # Since validators cannot be async, ValueError won't trigger a 422 HTTP response in FastAPI
+            # But a "pure" HTTPException shouldn't be thrown at this level
+            # raise ValueError("Invalid id")
+            raise HTTPException(status_code=422, detail="Invalid id")
         return self
 
         
