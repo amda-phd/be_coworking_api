@@ -43,12 +43,12 @@ async def ping_mongodb(db: AsyncIOMotorDatabase):
     except Exception as e:
         raise f"Something went wrong with the database:\n{e}"
         
-async def seed_mongodb(db: AsyncIOMotorClient, data: dict, clean: bool = True):
+async def seed_mongodb(mongodb: AsyncIOMotorClient, data: dict, clean: bool = True):
     counter = 0
     for key in data:
         if clean:
-            await db[key].drop()
-        response = await db[key].insert_many(jsonable_encoder(data[key]))
+            await mongodb[key].drop()
+        response = await mongodb[key].insert_many(jsonable_encoder(data[key]))
         counter += len(response.inserted_ids)
     
     return f"{counter} entries created"

@@ -1,18 +1,26 @@
 from fastapi.testclient import TestClient
+from fastapi.encoders import jsonable_encoder
+
 import pytest
 import json
 
+import pytest_asyncio
+
 from src.main import app
-from src.db import connect_to_mongodb, seed_mongodb
+from src.db import connect_to_mongodb
 
 @pytest.fixture
 def test_db():
     return connect_to_mongodb(app, testing = True)
 
-@pytest.fixture
-def seed_db():
+@pytest_asyncio.fixture
+async def seed_db(test_db):
     f = open("tests/seed.json")
-    return seed_mongodb(test_db, json.load(f))
+    data = json.load(f)
+    for key in data:
+        collection = test_db[key]
+        await collection.insert_many(jsonable_encoder(data[key]))
+    return
 
 @pytest.fixture
 def client():
@@ -88,3 +96,21 @@ async def test_query_rooms(client, test_db, seed_db):
     assert response.status_code == 200, response.text
     rooms = response.json()
     assert len(rooms) == docs
+
+@pytest.mark.asyncio
+async def test_room_availability(client, test_db, seed_db):
+    booking = await test_db["bookings"].find_one({})
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time={booking['start']}")
+    assert response.status_code == 200, response.text
+    assert not response.json()
+
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-07-18T10:10")
+    assert response.status_code == 200, response.text
+    assert not response.json()
+
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-08-18T10:10")
+    assert response.status_code == 200, response.text
+    assert response.json()
+
+    response = client.get(f"/rooms/7/availability?time={booking['start']}")
+    assert response.status_code == 404, response.text
