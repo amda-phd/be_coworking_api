@@ -25,4 +25,5 @@ async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
     created_room = await request.app.mongodb["rooms"].find_one({
         "_id": new_room.inserted_id
     })
-    return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
+    return created_room
+    # return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
