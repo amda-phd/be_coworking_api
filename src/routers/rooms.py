@@ -20,6 +20,7 @@ async def list_rooms(
 
 @router.post("", description="Add a new available room")
 async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
+    room = await room.add_id(collection=request.app.mongodb["rooms"])
     room = jsonable_encoder(room)
     new_room = await request.app.mongodb["rooms"].insert_one(room)
     created_room = await request.app.mongodb["rooms"].find_one({
