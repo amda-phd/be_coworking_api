@@ -2,10 +2,9 @@ from fastapi import APIRouter, Body, Request, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import List
-from ..db.models.bookings import regex_datetime
 import re
 
-
+from ..db.models.bookings import regex_datetime
 from ..db.models.rooms import RoomBase, RoomDB
 
 router = APIRouter()

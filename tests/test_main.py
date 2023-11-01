@@ -117,3 +117,30 @@ async def test_room_availability(client, test_db, seed_db):
 
     response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-07-18T10:10")
     assert response.status_code == 422, response.text
+
+@pytest.mark.asyncio
+async def test_query_bookings(client, test_db, seed_db):
+    response = client.get("/bookings")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == 10
+
+    bookings = await test_db["bookings"].count_documents({})
+    response = client.get(f"/bookings?lim={bookings}")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == bookings
+
+    id_client = 1
+    id_room = 2
+    bookings = await test_db["bookings"].count_documents({ "id_client": id_client })
+    response = client.get(f"/bookings?id_client={id_client}")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == bookings
+
+    bookings = await test_db["bookings"].count_documents({ "id_client": id_client, "id_room": id_room })
+    response = client.get(f"/bookings?id_client={id_client}&id_room={id_room}")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == bookings
+
+    response = client.get(f"/bookings?id_client=7&id_room={id_room}")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) == 0
