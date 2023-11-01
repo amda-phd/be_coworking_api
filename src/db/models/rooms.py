@@ -2,10 +2,12 @@ from ..models import MongoBaseModel
 from pydantic import Field, constr, validator
 from datetime import time
 
+regex_time = r'^[0-1][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]$'
+
 class RoomDB(MongoBaseModel):
     capacity: int = Field(gt = 0)
-    opening: constr(regex=r'^[0-1][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]$')
-    closing: constr(regex=r'^[0-1][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]$')
+    opening: constr(regex=regex_time)
+    closing: constr(regex=regex_time)
 
 class RoomBase(RoomDB):
     @validator('opening', 'closing')

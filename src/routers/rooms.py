@@ -2,7 +2,8 @@ from fastapi import APIRouter, Body, Request, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import List
-from datetime import datetime
+from ..db.models.bookings import regex_datetime
+import re
 
 
 from ..db.models.rooms import RoomBase, RoomDB
@@ -31,9 +32,12 @@ async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
     return created_room
     # return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
 
-# TODO: Improve time validation
+# TODO: Improve time validation using arrow and add "human-friendly" times (like now, today...)
 @router.get("/{id}/availability", description="Check availability for a room at a given time")
-async def check_availability(id: int, request: Request, time):
+async def check_availability(id: int, request: Request, time: str):
+    regex = re.compile(regex_datetime)
+    if not regex.match(time):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unprocessable time. Remember to use ZULU format")
     room = await request.app.mongodb["rooms"].find_one({ "id": id })
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Room with id {id} not found")

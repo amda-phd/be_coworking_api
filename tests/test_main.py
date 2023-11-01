@@ -104,13 +104,16 @@ async def test_room_availability(client, test_db, seed_db):
     assert response.status_code == 200, response.text
     assert not response.json()
 
-    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-07-18T10:10")
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-07-18T10:10Z")
     assert response.status_code == 200, response.text
     assert not response.json()
 
-    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-08-18T10:10")
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-08-18T10:10Z")
     assert response.status_code == 200, response.text
     assert response.json()
 
     response = client.get(f"/rooms/7/availability?time={booking['start']}")
     assert response.status_code == 404, response.text
+
+    response = client.get(f"/rooms/{booking['id_room']}/availability?time=2023-07-18T10:10")
+    assert response.status_code == 422, response.text
