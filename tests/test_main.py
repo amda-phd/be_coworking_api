@@ -52,13 +52,13 @@ id_room: None
 async def test_create_room_success(client, test_db):
     # Providing a valid id number
     response = client.post("/rooms", json = { **ok_room, "id": 1 })
-    assert response.status_code == 200, response.text
+    assert response.status_code == 201, response.text
     new_room = response.json()
     assert new_room["id"] == 1
 
     # Letting the model create the right id
     response = client.post("/rooms", json = ok_room)
-    assert response.status_code == 200, response.text
+    assert response.status_code == 201, response.text
     new_room = response.json()
     id_room = new_room["id"]
     db_entry = await test_db["rooms"].find_one({ "id": id_room })
@@ -144,3 +144,58 @@ async def test_query_bookings(client, test_db, seed_db):
     response = client.get(f"/bookings?id_client=7&id_room={id_room}")
     assert response.status_code == 200, response.text
     assert len(response.json()) == 0
+
+ok_booking = {
+    "id_room": 1,
+    "id_client": 1,
+    "start": "2024-08-21T10:00Z",
+    "end": "2024-08-21T14:30Z"
+}
+@pytest.mark.asyncio
+async def test_create_booking_success(client, test_db, seed_db):
+    pre_bookings = await test_db["bookings"].count_documents({})
+    response = client.post("/bookings", json = ok_booking)
+    assert response.status_code == 201, response.text
+    post_bookings = await test_db["bookings"].count_documents({})
+    assert post_bookings == pre_bookings + 1
+
+@pytest.mark.asyncio
+async def test_create_booking_errors(client, test_db, seed_db):
+    pre_docs = await test_db["bookings"].count_documents({})
+
+    # Non existent entities
+    response = client.post("/bookings", json = { **ok_booking, "id_room": 10 })
+    assert response.status_code == 404, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "id_client": 10 })
+    assert response.status_code == 404, response.text
+
+    # Wrong hours
+    response = client.post("/bookings", json = { **ok_booking, "start": "2023-07-18T10:10Z", "end": "2023-07-18T11:00Z" })
+    assert response.status_code == 422, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "start": ok_booking["end"], "end": ok_booking["start"] })
+    assert response.status_code == 422, response.text
+    post_docs = await test_db["bookings"].count_documents({})
+    assert pre_docs == post_docs
+
+    # Overlapping bookings
+    response = client.post("/bookings", json = ok_booking)
+    response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T10:10Z", "end": "2024-08-21T11:00Z" })
+    assert response.status_code == 406, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T14:25Z", "end": "2024-08-21T15:00Z" })
+    assert response.status_code == 406, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T14:25Z", "end": "2024-08-21T15:00Z" })
+    assert response.status_code == 406, response.text
+
+    # Bookings out of the room's opening hours
+    response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T06:00Z" })
+    assert response.status_code == 406, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T21:00Z", "end": "2024-08-21T23:00Z" })
+    assert response.status_code == 406, response.text
+
+    response = client.post("/bookings", json = { **ok_booking, "end": "2024-08-21T23:00Z" })
+    assert response.status_code == 406, response.text

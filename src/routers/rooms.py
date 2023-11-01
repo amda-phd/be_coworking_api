@@ -27,9 +27,8 @@ async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
     new_room = await request.app.mongodb["rooms"].insert_one(room)
     created_room = await request.app.mongodb["rooms"].find_one({
         "_id": new_room.inserted_id
-    })
-    return created_room
-    # return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
+    }, { "_id": 0})
+    return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
 
 # TODO: Improve time validation using arrow and add "human-friendly" times (like now, today...)
 @router.get("/{id}/availability", description="Check availability for a room at a given time")
