@@ -45,3 +45,65 @@ async def check_availability(id: int, request: Request, time: str):
         "end": { "$gt": time }
     })
     return bookings == 0
+
+@router.get("/{id}/overlap", description="Find overlapping bookings for a given room")
+async def check_overlaps(id: int, request: Request):
+    room = await request.app.mongodb["rooms"].count_documents({ "id": id })
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Room with id {id} not found")
+    
+    async def find_overlapping_bookings(db, id_room):
+        pipeline = [
+            {
+                "$match": {"id_room": id_room}
+            },
+            {
+                "$group": {
+                    "_id": "$id_room",
+                    "bookings": {
+                        "$push": {
+                            "id_client": "$id_client",
+                            "start": "$start",
+                            "end": "$end"
+                        }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "room": "$_id",
+                    "overlapping_bookings": {
+                        "$filter": {
+                            "input": "$bookings",
+                            "as": "booking",
+                            "cond": {
+                                "$anyElementTrue": {
+                                    "$map": {
+                                        "input": "$bookings",
+                                        "as": "otherBooking",
+                                        "in": {
+                                            "$and": [
+                                                {"$ne": ["$$booking.id_client", "$$otherBooking.id_client"]},
+                                                {"$lt": ["$$booking.start", "$$otherBooking.end"]},
+                                                {"$gt": ["$$booking.end", "$$otherBooking.start"]}
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "overlapping_bookings": {"$ne": []}
+                }
+            }
+        ]
+
+        async for doc in db["bookings"].aggregate(pipeline):
+            return doc
+        
+    result = await find_overlapping_bookings(request.app.mongodb, id)
+    return result
