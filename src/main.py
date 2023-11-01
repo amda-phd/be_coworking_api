@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from .db import connect_to_mongodb, close_mongodb_connection, ping_mongodb, seed_mongodb
 from .routers.rooms import router as rooms_router
 from .routers.bookings import router as bookings_router
+from .routers.reports import router as reports_router
 
 app = FastAPI(
     title = "Coworking API",
@@ -57,3 +58,4 @@ async def seed_db(
 
 app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
 app.include_router(bookings_router, prefix="/bookings", tags=["bookings"])
+app.include_router(reports_router, prefix="/reports", tags=["bookings"])

@@ -52,3 +52,10 @@ async def seed_mongodb(mongodb: AsyncIOMotorClient, data: dict, clean: bool = Tr
         counter += len(response.inserted_ids)
     
     return f"{counter} entries created"
+
+async def run_aggregation(collection, pipeline):
+    docs = []
+    async for doc in collection.aggregate(pipeline):
+        docs.append(doc)
+    return docs
+    
