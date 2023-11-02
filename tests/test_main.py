@@ -37,10 +37,11 @@ async def test_healthy_db(client, test_db):
     pre_docs = await test_db["health"].count_documents({})
     assert pre_docs == 0
     response = client.get("/health")
-    assert response.status_code == 204
+    assert response.status_code == 200
     post_docs = await test_db["health"].count_documents({})
     assert post_docs == pre_docs + 1
-    # assert response.json() == None
+    data = response.json()
+    assert data["health"] == 'ok'
 
 ok_room = {
     "opening": "09:00",

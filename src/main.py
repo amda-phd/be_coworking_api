@@ -22,17 +22,16 @@ def on_shutdown():
 
 @app.get(
     "/health",
-    status_code = 204,
     description = "Check the server's and MongoDB connection integrity",
     responses = {
-        204: { "description": "Server and database reachable" },
+        200: { "description": "Server and database reachable" },
         500: { "description": "Server unreachable" },
         503: { "description": "Database unreachable" }
     })
 async def health(request: Request):
     try:
         await ping_mongodb(request.app.mongodb)
-        return Response(status_code = status.HTTP_204_NO_CONTENT)
+        return JSONResponse(content=jsonable_encoder({ "health": "ok" }))
     except Exception as e:
         print(e)
         raise HTTPException(status_code=503, detail="MongoDB unavailable")
