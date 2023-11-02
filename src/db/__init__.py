@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 MONGODB_HOST = config('MONGODB_HOST', cast=str)
 MONGODB_PORT = config('MONGODB_PORT', cast=int)
 MONGODB_NAME = config('MONGODB_NAME', cast=str)
+MONGODB_URL = config('MONGODB_URL', default="", cast=str)
 
 # Initialize the MongoDB client and database
 client: AsyncIOMotorClient = None
@@ -15,6 +16,8 @@ def connect_to_mongodb(app, testing: bool = False):
     global client, db
     if testing:
         client = AsyncMongoMockClient()
+    elif MONGODB_URL != "":
+        client = AsyncIOMotorClient(MONGODB_URL)
     else:
         client = AsyncIOMotorClient(MONGODB_HOST, MONGODB_PORT)
     db = client[MONGODB_NAME]
