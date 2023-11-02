@@ -2,7 +2,7 @@
 
 ![Render](https://img.shields.io/badge/Render-%46E3B7.svg?style=for-the-badge&logo=render&logoColor=white)![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 
-A REST API to manage a coworking facility. Check our live documentation [here](https://be-coworking-api.onrender.com).
+A REST API to manage a coworking facility. Check our live documentation [here](https://be-coworking-api.onrender.com/redoc).
 
 ## Usage
 
