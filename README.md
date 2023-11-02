@@ -1,8 +1,8 @@
 # Coworking REST API
 
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
+![Render](https://img.shields.io/badge/Render-%46E3B7.svg?style=for-the-badge&logo=render&logoColor=white)![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 
-A REST API to manage a coworking facility.
+A REST API to manage a coworking facility. Check our live documentation [here](https://be-coworking-api.onrender.com).
 
 ## Usage
 
@@ -57,6 +57,10 @@ uvicorn src.main:app --reload
 
 If you don't specify a different port, the REST API will be served from [http://localhost:8000/](http://localhost:8000/)
 
+### Live version
+
+A live version of the app has been deployed using Render's and MongoDB Atlas' free tiers and can be accessed from [https://be-coworking-api.onrender.com](https://be-coworking-api.onrender.com), including live documentation. **BEWARE**: Free tiers aren't known for their speed. If you try to access this deployment, your first request is likely to take several seconds to respond.
+
 ### Tests
 
 Although testing coverage is still a work in progress, the current version of the testing suite for this project can be executed with the following command, again from the project's root and while running its environment:
@@ -69,16 +73,18 @@ pytest tests/
 
 The project serves its own OpenAPI-compliant documentation on execution. The documentation can be accessed wia the following paths:
 
-- [http://localhost:8000/doc](http://localhost:8000/doc) for Swagger UI version.
+- [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI version.
 - [http://localhost:8000/redoc](http://localhost:8000/redoc) for ReDoc version.
 
 Both UIs allow testing the endpoints locally.
 
+### Postman collection
+
+For easier exploration, we're also providing a Postman collection (can be easily spotted at the project's root folder) to help the exploration of the endpoints. Don't foget to provide `IP` and `PORT` environment variables when running the Postman collection, or modifying the `url` collection variable with the url of your local setup. Of course, the projects's deployment url (https://be-coworking-api.onrender.com) can be used for exploration.
+
 ## Features
 
 The project has been created to comply with the specs supplied by Baobab Soluciones. The complete list of endpoints it produces can be examined, along with a brief description of teach endpoint's functionalities and potential responses, by inspecting the OpenAPI documentation mentioned in the previous point.
-
-For easier exploration, we're also providing a Postman collection to help the exploration of the endpoints. Don't foget to provide `IP` and `PORT` environment variables when running the Postman collection, or modifying the `url` collection variable with the url of your local setup.
 
 ### Considerations
 
@@ -92,4 +98,5 @@ For easier exploration, we're also providing a Postman collection to help the ex
 - Testing for several endpoints is provided, but test coverage is far from perfect yet.
 - Althgough OpenAPI documentation is provided, there's work left to do regarding the response models definition. All the responses remain generic.
 - Error-handling middleware would help provide more detailed errors if an exception is raised at the database-communication level.
+- Mature logging.
 - Include linting, pre-commit hook and testing Github workflow.
