@@ -1,23 +1,32 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from typing import Optional
 from datetime import datetime
 from math import floor
 import arrow
+import re
 
 from ..db import run_aggregation
+
+regex_date = r'^\d{4}-\d{2}-\d{2}$'
 
 router = APIRouter()
 
 @router.get(
     "/client_bookings",
     description="Get the number of bookings per client. If no id_client is provided, the report for all the clients will be offered.",
-    tags=["clients", "bookings"]
+    tags=["clients", "bookings"],
+    responses = {
+        404: { "description": "The requested id_client (if provided) cannot be found" }
+    }
 )
 async def bookings_by_client(
     request: Request,
     id_client: Optional[int] = None,
     sort: Optional[str] = None
 ):
+    if id_client is not None and (await request.app.mongodb["clients"].count_documents({ "id": id_client })) == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Client with id {id_client} not found")
+    
     pipeline = [
         {
             "$group": {
@@ -51,7 +60,10 @@ async def bookings_by_client(
 @router.get(
     "/room_usage",
     description="For a given time period, get the ratio of room usage. If no id_room is provided, the report for all the rooms will be offered.",
-    tags=["rooms", "bookings"]
+    tags=["rooms", "bookings"],
+    responses = {
+        404: { "description": "The requested id_room (if provided) cannot be found" }
+    }
 )
 async def room_usage_by_period(
     request: Request,
@@ -59,10 +71,18 @@ async def room_usage_by_period(
     from_day: str = None,
     to_day: str = None
 ):
-    milliseconds_in_minute = 60000
+    regex = re.compile(regex_date)
+    if not regex.match(from_day) or not regex.match(to_day):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unprocessable time. Remember to use ZULU format")
+    
     days = (arrow.get(to_day, "YYYY-MM-DD") - arrow.get(from_day, "YYYY-MM-DD")).days
-    if days < 0:
+    if days < 1:
         raise HTTPException(status_code=422, detail="to_day has to happen AFTER from_day")
+    
+    if id_room is not None and (await request.app.mongodb["rooms"].count_documents({ "id": id_room })) == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Room with id {id_room} not found")
+
+    milliseconds_in_minute = 60000
     from_datetime = datetime.strptime(from_day, '%Y-%m-%d')
     to_datetime = datetime.strptime(to_day, '%Y-%m-%d')
     
@@ -97,19 +117,6 @@ async def room_usage_by_period(
                             "$subtract": ["$closingTime", "$openingTime"]
                         },
                         milliseconds_in_minute
-                    ]
-                },
-                "opened_minutes": {
-                    "$multiply": [
-                        {
-                            "$divide": [
-                                {
-                                    "$subtract": ["$closingTime", "$openingTime"]
-                                },
-                                milliseconds_in_minute
-                            ]
-                        },
-                        days
                     ]
                 }
             }
@@ -172,8 +179,9 @@ async def room_usage_by_period(
     for room in opening_minutes:
         for booking in used_minutes:
             if room["_id"] == booking["_id"]:
-                room["used_minutes"] = booking["total_minutes"]
-                room["use_percentage"] = floor(1000 * room["used_minutes"] / room["opened_minutes"]) / 10
+                room["booked_minutes"] = booking["total_minutes"]
+                room["opened_minutes"] = days * room["opening_minutes_per_day"]
+                room["use_percentage"] = floor(1000 * room["booked_minutes"] / room["opened_minutes"]) / 10
                 result.append(room)
 
     return result

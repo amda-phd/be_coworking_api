@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Body, Request, status, HTTPException
-from typing import Optional, List
+from typing import Optional
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -56,7 +56,7 @@ async def create_booking(request: Request, booking: BookingBase = Body(...)):
     end = datetime.strptime(booking.end, '%Y-%m-%dT%H:%MZ')
     closing = end.replace(hour=closing.hour, minute=closing.minute)
     if start < opening or start > closing or end > closing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"We're sorry. The room with id {booking.id_room} won't be opened at the requested hours. Please, try a different schedule")
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=f"We're sorry. The room with id {booking.id_room} won't be opened at the requested hours. Please, try a different schedule")
 
     # Check that the room is available at the requested time
     if (await request.app.mongodb["bookings"].count_documents({
@@ -75,7 +75,7 @@ async def create_booking(request: Request, booking: BookingBase = Body(...)):
             }
         ]
     })) != 0:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=f"We're sorry. The room with id {booking.id_room} is already booked at these hours. Please, try a different room or different schedule")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"We're sorry. The room with id {booking.id_room} is already booked at these hours. Please, try a different room or different schedule")
     
     booking = await booking.add_id(collection = request.app.mongodb["bookings"])
     booking = jsonable_encoder(booking)

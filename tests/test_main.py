@@ -182,13 +182,13 @@ async def test_create_booking_errors(client, test_db, seed_db):
     # Overlapping bookings
     response = client.post("/bookings", json = ok_booking)
     response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T10:10Z", "end": "2024-08-21T11:00Z" })
-    assert response.status_code == 406, response.text
+    assert response.status_code == 409, response.text
 
     response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T14:25Z", "end": "2024-08-21T15:00Z" })
-    assert response.status_code == 406, response.text
+    assert response.status_code == 409, response.text
 
     response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T14:25Z", "end": "2024-08-21T15:00Z" })
-    assert response.status_code == 406, response.text
+    assert response.status_code == 409, response.text
 
     # Bookings out of the room's opening hours
     response = client.post("/bookings", json = { **ok_booking, "start": "2024-08-21T06:00Z" })
