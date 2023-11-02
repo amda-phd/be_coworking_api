@@ -2,9 +2,6 @@
     "builds": [
       {
         "src": "run.py",
-        "routes": {
-            "dest": "/src"
-        },
         "use": "@vercel/python"
       }
     ]
