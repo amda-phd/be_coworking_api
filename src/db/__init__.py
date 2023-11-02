@@ -1,12 +1,15 @@
+from email.policy import default
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from mongomock_motor import AsyncMongoMockClient
 from decouple import config
 from fastapi.encoders import jsonable_encoder
 
-MONGODB_HOST = config('MONGODB_HOST', cast=str)
-MONGODB_PORT = config('MONGODB_PORT', cast=int)
+MONGODB_HOST = config('MONGODB_HOST', default="", cast=str)
+MONGODB_PORT = config('MONGODB_PORT', default=0, cast=int)
 MONGODB_NAME = config('MONGODB_NAME', cast=str)
 MONGODB_URL = config('MONGODB_URL', default="", cast=str)
+MONGODB_USERNAME = config('MONGODB_USERNAME', default="", cast=str)
+MONGODB_PASSWORD = config('MONGODB_PASSWORD', default="", cast="")
 
 # Initialize the MongoDB client and database
 client: AsyncIOMotorClient = None
@@ -17,7 +20,7 @@ def connect_to_mongodb(app, testing: bool = False):
     if testing:
         client = AsyncMongoMockClient()
     elif MONGODB_URL != "":
-        client = AsyncIOMotorClient(MONGODB_URL)
+        client = AsyncIOMotorClient(MONGODB_URL, MONGODB_USERNAME, MONGODB_PASSWORD)
     else:
         client = AsyncIOMotorClient(MONGODB_HOST, MONGODB_PORT)
     db = client[MONGODB_NAME]
