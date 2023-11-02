@@ -9,7 +9,7 @@ MONGODB_PORT = config('MONGODB_PORT', default=0, cast=int)
 MONGODB_NAME = config('MONGODB_NAME', cast=str)
 MONGODB_URL = config('MONGODB_URL', default="", cast=str)
 MONGODB_USERNAME = config('MONGODB_USERNAME', default="", cast=str)
-MONGODB_PASSWORD = config('MONGODB_PASSWORD', default="", cast="")
+MONGODB_PASSWORD = config('MONGODB_PASSWORD', default="", cast=str)
 
 # Initialize the MongoDB client and database
 client: AsyncIOMotorClient = None
