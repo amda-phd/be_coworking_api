@@ -83,6 +83,7 @@ For easier exploration, we're also providing a Postman collection to help the ex
 ### Considerations
 
 - Since the sample data provided by the company required the usage of `int` numbers as `ids` for the MongoDB collections, the ability to create unique ids for each new entry has been enforced in the data models. This way of storing `ids` is, however, highly problematic. I would suggest the usage of unique handles or micro-uuids if MongoDB's ObjectIds are considered too human-unfriendly.
+- The `/seed` endpoint will write **ANY** data provided into the database. Ideally, provide the data that was contained in the sample json file that was offered with the specs.
 - The requirement number 7. in the company's document, "obtain the usage % of the rooms" wasn't totally clear. An endpoint that analyses the time usage for a provided time period has been produced to cover this feature.
 - Python's typing library `pydantic` has been employed as a source of type hinting, database model definition and validation for the endpoints.
   
