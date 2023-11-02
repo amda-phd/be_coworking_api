@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Request
-from typing import Optional, List
+from typing import Optional
 
 from ..db import run_aggregation
 
 router = APIRouter()
 
-@router.get("/client_bookings", description="Get the number of bookings per client")
+@router.get(
+    "/client_bookings",
+    description="Get the number of bookings per client",
+    tags=["clients", "bookings"]
+)
 async def bookings_by_client(
     request: Request,
     id_client: Optional[int] = None,

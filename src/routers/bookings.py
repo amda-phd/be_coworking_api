@@ -9,7 +9,7 @@ from ..db.models.bookings import BookingBase, BookingDB
 
 router = APIRouter()
 
-@router.get("", description="List bookings with basic pagination and filtering by client and room")
+@router.get("", description="List bookings with basic pagination. Optional filtering by client and/or room is available")
 async def list_bookings(
     request: Request,
     id_client: Optional[int] = None,
@@ -27,7 +27,17 @@ async def list_bookings(
     results = [BookingDB(**raw_booking) async for raw_booking in full_query]
     return results
 
-@router.post("", description="Add a new booking for a room and client")
+@router.post(
+        "",
+        description="Add a new booking for a room and client",
+        status_code = 201,
+        responses = {
+            201: { "description": "Booking processed correctly and recorded in the database" },
+            404: { "description": "Either client or room not found" },
+            406: { "description": "The proposed booking is incompatible with the opening times of the requested room" },
+            409: { "description": "Although all the booking parameters are correct, the request overlapps with a booking that exists already" }
+        }
+    )
 async def create_booking(request: Request, booking: BookingBase = Body(...)):
     # Check that the client exists
     if (await request.app.mongodb["clients"].count_documents({ "id": booking.id_client })) == 0:
@@ -46,7 +56,7 @@ async def create_booking(request: Request, booking: BookingBase = Body(...)):
     end = datetime.strptime(booking.end, '%Y-%m-%dT%H:%MZ')
     closing = end.replace(hour=closing.hour, minute=closing.minute)
     if start < opening or start > closing or end > closing:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=f"We're sorry. The room with id {booking.id_room} won't be opened at the requested hours. Please, try a different schedule")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"We're sorry. The room with id {booking.id_room} won't be opened at the requested hours. Please, try a different schedule")
 
     # Check that the room is available at the requested time
     if (await request.app.mongodb["bookings"].count_documents({

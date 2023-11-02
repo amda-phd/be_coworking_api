@@ -21,7 +21,14 @@ async def list_rooms(
     results = [RoomDB(**raw_room) async for raw_room in full_query]
     return results
 
-@router.post("", description="Add a new available room")
+@router.post(
+    "",
+    description="Add a new available room",
+    status_code=201,
+    responses = {
+        201: { "description": "Room processed correctly and recorded in the database" },
+    }
+)
 async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
     room = await room.add_id(collection=request.app.mongodb["rooms"])
     room = jsonable_encoder(room)
@@ -32,8 +39,15 @@ async def create_room(request: Request, room: RoomBase = Body(...)) -> RoomDB:
     return JSONResponse(status_code = status.HTTP_201_CREATED, content = created_room)
 
 # TODO: Improve time validation using arrow and add "human-friendly" times (like now, today...)
-@router.get("/{id}/availability", description="Check availability for a room at a given time")
-async def check_availability(id: int, request: Request, time: str):
+@router.get(
+    "/{id}/availability",
+    description="Check availability for a room at a given time",
+    responses = {
+        200: { "description": "The parameters have been processed correctly and the answer has been obtained" },
+        404: { "description": "The requested room doesn't exist in the database" }
+    }
+)
+async def check_availability(id: int, request: Request, time: str) -> bool:
     regex = re.compile(regex_datetime)
     if not regex.match(time):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unprocessable time. Remember to use ZULU format")
@@ -47,7 +61,14 @@ async def check_availability(id: int, request: Request, time: str):
     })
     return bookings == 0
 
-@router.get("/{id}/overlap", description="Find overlapping bookings for a given room")
+@router.get(
+    "/{id}/overlap",
+    description="Find overlapping bookings for a given room",
+    responses = {
+        200: { "description": "The parameters have been processed correctly and the answer has been obtained" },
+        404: { "description": "The requested room doesn't exist in the database" }
+    }
+)
 async def check_overlaps(id: int, request: Request):
     room = await request.app.mongodb["rooms"].count_documents({ "id": id })
     if room is None:

@@ -40,6 +40,7 @@ async def health(request: Request):
 
 @app.post(
     "/seed",
+    status_code = 201,
     description="UNSAFELY Seed the database from a json",
     responses = {
         201: { "description": "All data was seeded successfully" },
@@ -58,4 +59,4 @@ async def seed_db(
 
 app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
 app.include_router(bookings_router, prefix="/bookings", tags=["bookings"])
-app.include_router(reports_router, prefix="/reports", tags=["bookings"])
+app.include_router(reports_router, prefix="/reports")
